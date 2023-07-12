@@ -1,7 +1,5 @@
 #include <Build.h> //Desarrollado por Ricardo Pabón Serna.
 #include <Memoria.h>
-// Archivo de cabecera.
-// #include "C:\Users\ricardo\Desktop\Taller_Ing_II\include\Selecion_datos.h"
 
 /************ IMPLEMETNACIÓN PARA EL CALCULO DE LA REGRESION CUADRATICA **************/
 

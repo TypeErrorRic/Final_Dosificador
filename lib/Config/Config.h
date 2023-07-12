@@ -18,7 +18,7 @@
 
 #define PORTCONMUT 12 // Pin reservado exclusivamente para el conmutador en Arduino.
 #define PIN_AVR 6     // Pin reservado exclusivamente para el conmutador.
-#define CONMUTADOR ~((*((volatile uint8_t *)_SFR_MEM_ADDR(PINB)) & (1 << PIN_AVR)) >> PIN_AVR)
+#define CONMUTADOR (0X01 & ~((*((volatile uint8_t *)_SFR_MEM_ADDR(PINB)) & (1 << PIN_AVR)) >> PIN_AVR))
 
 /**
  * @note La conexión del conmutador está hecha en pull_down
@@ -211,15 +211,13 @@ void escribirLcd(const T estado, short fila, short columna, bool limpiar = false
 short Modo_Configuracion();
 
 /**FUNCIONES PARA EL MANEJO DEl FLUJO DEL PROGRAMA Y EJECUCIÓN DEL SISTEMA**/
-
-#define DELAY_EJE 500
 #define TIME_CONFIRMACION_CELDAD 100
 
 // Función de flujo de control:
 void flujo_ejecucion_programa(bool (*revisarTolva)(void), void (*llenarTolva)(void), void (*ApagarTolva)(void),
                               bool (*revisarEnvase)(short &), bool (*llenado)(void), void (*doLlenado)(void),
-                              float (*stopLlenado)(void), void (*alerta)(short type, bool state), void (*MenuPrincipal)(bool),
-                              void (*actualizar)(void), void (*initCeldad)(unsigned int num));
+                              float (*stopLlenado)(void), void (*alerta)(short type, bool state), void (*MenuPrincipal)(bool, bool),
+                              void (*actualizar)(void), void (*initCeldad)(unsigned int num), bool (*confirmarEnvase)(void));
 
 // Función de Inicialización de registro y Memoria:
 void RevisionSensoresInit();

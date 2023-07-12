@@ -8,7 +8,6 @@
  * @copyright Copyright (c) 2022
  */
 #include <Build.h>
-#include <Memoria.h>
 /**
  * @brief Función que se encarga de configurar los parametros inciales de las funciones.
  */
@@ -41,7 +40,8 @@ void loop()
   case 0:
     while (1)
       flujo_ejecucion_programa(stateTolva, fillTolva, offTolva, revisarEnvase,
-        revisarLLenado, llenandoEnvase, stopLllenadoEnvase, alarma, MostrarPantalla, Captura_dato, initCeldad);
+        revisarLLenado, llenandoEnvase, stopLllenadoEnvase, alarma, MostrarPantalla,
+        Captura_dato, initCeldad, confirmarEnvase);
     break;
   case 1:
     //Configuración sistema:

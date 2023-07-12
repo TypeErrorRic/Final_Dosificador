@@ -23,30 +23,37 @@ void setLCD()
     Lcd.print("Ready");
 }
 
-static void escribirEstado(short estado, void (*alarma)(short, bool), bool& realizar, void (*MenuPrincipal)(bool))
+static unsigned long time_Visual = 0;
+
+static void escribirEstado(short estado, void (*alarma)(short, bool), bool& realizar, void (*MenuPrincipal)(bool, bool), bool confirmacion)
 {
     if(Estado == 5 && ejecutarMenu)
     {
-      MenuPrincipal(true);
+      MenuPrincipal(true, confirmacion);
       ejecutarMenu = false;
     }
     if (!mostrarMensaje)
     {
       //Apagar alarmas
       digitalWrite(7, LOW);
-      Lcd.clear();
-      Lcd.setCursor(0, 0);
-      Lcd.print("Estado:");
-      Lcd.print(estado);
-      Lcd.setCursor(11, 0);
-      Lcd.print("E1:");
-      Lcd.print(*(NUM_ENVASES[*NUM_CICLO_FINAL])[0]);
-      Lcd.setCursor(0, 1);
-      Lcd.print("E2:");
-      Lcd.print(*(NUM_ENVASES[*NUM_CICLO_FINAL])[1]);
-      Lcd.setCursor(11, 1);
-      Lcd.print("E3:");
-      Lcd.print(*(NUM_ENVASES[*NUM_CICLO_FINAL])[2]);
+      if (1000 < (millis() - time_Visual))
+      {
+        Lcd.clear();
+        Lcd.setCursor(0, 0);
+        Lcd.print("Estado:");
+        Lcd.print(estado);
+        Lcd.setCursor(11, 0);
+        Lcd.print("E1:");
+        Lcd.print(*(NUM_ENVASES[*NUM_CICLO_FINAL])[0]);
+        Lcd.setCursor(0, 1);
+        Lcd.print("E2:");
+        Lcd.print(*(NUM_ENVASES[*NUM_CICLO_FINAL])[1]);
+        Lcd.setCursor(11, 1);
+        Lcd.print("E3:");
+        Lcd.print(*(NUM_ENVASES[*NUM_CICLO_FINAL])[2]);
+        //Actualizar tiempo.
+        time_Visual = millis();
+      }
     }
     else
     {
@@ -344,7 +351,8 @@ void Revision_variables(bool(*revisarTolva)(void), void(*llenarTolva)(void),
 void flujo_ejecucion_programa(bool(*revisarTolva)(void), void(*llenarTolva)(void), void(*ApagarTolva)(void), 
                               bool(*revisarEnvase)(short &), bool(*llenado)(void), void(*doLlenado)(void),
                               float (*stopLlenado)(void), void(*alerta)(short type, bool state), 
-                              void (*MenuPrincipal)(bool), void (*actualizar)(void), void (*initCeldad)(unsigned int num))
+                              void (*MenuPrincipal)(bool, bool), void (*actualizar)(void), void (*initCeldad)(unsigned int),
+                              bool (*confirmarEnvase)(void))
 {
   actualizar();
   //Revision de todos los sensores:
@@ -361,7 +369,7 @@ void flujo_ejecucion_programa(bool(*revisarTolva)(void), void(*llenarTolva)(void
     if (CONMUTADOR)
     {
       //Mostrar que se finalizo el mensaje:
-      escribirEstado(Estado, alerta, Alert, MenuPrincipal);
+      escribirEstado(Estado, alerta, Alert, MenuPrincipal, confirmarEnvase());
       //Reconocer a que estado se va:
       if (RECONOCIMIENTO_ENVASE) Estado = 2;
       else Estado = 3;
@@ -379,7 +387,7 @@ void flujo_ejecucion_programa(bool(*revisarTolva)(void), void(*llenarTolva)(void
     break;
   case 3: // ¿Cuál es el estado de la tolva?
     //Mostrar que se finalizo el mensaje:
-    escribirEstado(Estado, alerta, Alert, MenuPrincipal);
+    escribirEstado(Estado, alerta, Alert, MenuPrincipal, confirmarEnvase());
     //Determinar que estado va:
     if (revisarTolva()) {Estado = 5; if(!SENSAR_TOLVA) {MSENSORTOLVA(1);}}
     else Estado = 4;
@@ -454,9 +462,7 @@ void flujo_ejecucion_programa(bool(*revisarTolva)(void), void(*llenarTolva)(void
   default:
     break;
   }
-  escribirEstado(Estado, alerta, Alert, MenuPrincipal);
-  //Tiempo de ejecución:
-  delay(DELAY_EJE);
+  escribirEstado(Estado, alerta, Alert, MenuPrincipal, confirmarEnvase());
 }
 
 /*********** IMPLEMENTACIÓN DE FUNCIÓN PARA OBTENER EL ESTADO DEL SISTEMA ****************/
