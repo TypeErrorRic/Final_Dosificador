@@ -36,7 +36,9 @@ static unsigned short contador = 0;
 // Función para realizar la captura de datos para realizar la regresión cuadratica usnado promedio
 static void captureModulate(float &x, int (*y)(void), float &z, bool get_realizar)
 {
+	//Colocar un ángulo en la entrada:
 	angulo(puntos_busquedad[1]);
+	delay(1000);
 	// Iniciar toma del dato:
 	initCeldad(50);
 	fillTolva();
