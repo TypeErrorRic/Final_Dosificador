@@ -18,14 +18,14 @@ void setup()
   setLCD();
   // Configuracion Base del Sistema:
   // Inicialización de pines:
-  pinMode(PORTCONMUT, INPUT_PULLUP);        // Pin del conmutador.
+  pinMode(PORTCONMUT, INPUT_PULLUP); // Pin del conmutador.
   // Inicialización de funciones
-  RevisionSensoresInit(); // Revisar sensores.
-  initRegresionCuadratica();
-  initAlarma();
+  RevisionSensoresInit();    // Revisar sensores.
+  initRegresionCuadratica(); // Inicializar los valores de Regresión Cuadratica.
+  initAlarma();              // Inicializar la Alarma.
+  InitPortsCNYRELE();        // Inicializar CNY, Rele y Servomotor
   // Mensaje de finalización de configuración.
 }
-
 
 /**
  * @brief Bucle incial de ejecución.
@@ -38,11 +38,11 @@ void loop()
   case 0:
     while (1)
       flujo_ejecucion_programa(stateTolva, fillTolva, offTolva, revisarEnvase,
-        revisarLLenado, llenandoEnvase, stopLllenadoEnvase, alarma, MostrarPantalla,
-        Captura_dato, initCeldad, confirmarEnvase);
+                               revisarLLenado, llenandoEnvase, stopLllenadoEnvase, alarma, MostrarPantalla,
+                               Captura_dato, initCeldad, confirmarEnvase);
     break;
   case 1:
-    //Configuración sistema:
+    // Configuración sistema:
     ConfigSistem();
     break;
   case 2:

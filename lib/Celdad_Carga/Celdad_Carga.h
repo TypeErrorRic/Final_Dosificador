@@ -11,6 +11,7 @@
 #ifndef CELDAD_CARGA_H
 #define CELDAD_CARGA_H
 
+//Librería con puertos y funcionalidades de Arduino:
 #include <Arduino.h>
 #include "C:\Users\ricardo\Desktop\Taller_Ing_II\include\Lista_puertos.h"
 
@@ -101,7 +102,7 @@ extern pvResultsMedicion Medidas;
 // Rango de redondeo de los valores:
 #define VALOR_DESFASE 2
 // Porcentaje de error admitido entre 2 medidas
-#define VALOR_ERROR 5
+#define VALOR_ERROR 0.05
 // Porcentaje de error admitido entre 2 medidas cuando la última medida es mayor al umbral de que hay un envase.
 #define VALOR_ERROR_PASAR 5
 

@@ -164,9 +164,9 @@ bool stateTolva()
 		Serial.println("Tolva no requiere llenado");
 		return true;
 	default:
-		//Esperar un tiempo antes de realizar de nuevo la verificación:
+		// Esperar un tiempo antes de realizar de nuevo la verificación:
 		delay(500);
-		//Evaluar de nuevo la condición:
+		// Evaluar de nuevo la condición:
 		stateTolva();
 		break;
 	}
@@ -316,6 +316,7 @@ void alarma(short type, bool state)
 // Inizialiar el sistema de Alarma
 void initAlarma()
 {
+	// Inicializar pantalla y mensajes:
 	setupPantalla();
 	setupInteruptMassage();
 
@@ -343,7 +344,51 @@ static unsigned long timer = 0;
 
 #define DELAY_MESSAGE 3000UL
 
-static bool crash = false;
+static void pruebasModulares()
+{
+	escribirLcd<String>("Verificando", 0, 0, true);
+	escribirLcd<String>("Alimentador", 1, 0);
+	// Probar Rele.
+	fillTolva();
+	delay(2000);
+	offTolva();
+	delay(2000);
+	escribirLcd<String>("Verificando", 0, 0, true);
+	escribirLcd<String>("Servomotor.", 1, 0);
+	// Probar Servomotor:
+	for (int i = 1; i <= 6; i++)
+	{
+		angulo(i);
+		delay(500);
+	}
+	retornarCerrado(6);
+	delay(2000);
+	// Probar Sensor de Inducción:
+	escribirLcd<String>("Verificando", 0, 0, true);
+	escribirLcd<String>("Sensor Inducion", 1, 0);
+	while (isEnvaseIn());
+	//Probar Celdad de Carga:
+	escribirLcd<String>("Verificando", 0, 0, true);
+	escribirLcd<String>("Celdad Carga", 1, 0);
+	initCeldad(TIME_COMPROBACION);
+	short aux = 0;
+	while(1)
+	{
+		if (reconocerEnvaseEnSitioEnvasado(aux))
+		{
+			if(aux == 1)
+				break;
+		}
+		if((millis() - timer) > DELAY_MESSAGE)
+		{
+			escribirLcd<String>("Peso:", 0, 0, true);
+			escribirLcd<float>(Medidas.medicionHx, 1, 0);
+		}
+	}
+	stopMediciones();
+}
+
+static bool crash = false; // Bandera para salir del menu.
 
 void ConfigSistem()
 {
@@ -365,7 +410,7 @@ void ConfigSistem()
 			if ((millis() - timer) > DELAY_MESSAGE)
 			{
 				escribirLcd<String>("1. Regresion.", 0, 0, true);
-				escribirLcd<String>("2. Conf. Celda", 1, 0);
+				escribirLcd<String>("2. Conf. Celda.", 1, 0);
 				timer = millis();
 				counterChangeMessage++;
 			}
@@ -373,7 +418,8 @@ void ConfigSistem()
 		case 2:
 			if ((millis() - timer) > DELAY_MESSAGE)
 			{
-				escribirLcd<String>("3. Salir.", 0, 0, true);
+				escribirLcd<String>("3. P.Modular.", 0, 0, true);
+				escribirLcd<String>("4. Salir.", 1, 0, true);
 				timer = millis();
 				counterChangeMessage++;
 			}
@@ -402,6 +448,9 @@ void ConfigSistem()
 				crash = true;
 				break;
 			case '3':
+				pruebasModulares();
+				crash = true;
+			case '4':
 				crash = true;
 			default:
 				break;
@@ -417,9 +466,6 @@ static int val2 = 0;
 
 static int velActual = 0;
 
-static unsigned int estadoTolva = 2;
-static int rele = 30;
-
 static int lectura1 = 0; // Lectura Cny70 1
 static int lectura2 = 0; // Lecutra Cny70 2
 
@@ -433,6 +479,7 @@ static unsigned long previousMillisCny = 0;
 
 void InitPortsCNYRELE()
 {
+	// Inicializar puertos de entrada:
 	pinMode(CNY1, INPUT);
 	pinMode(CNY2, INPUT);
 	pinMode(RELAY_MOTOR, OUTPUT);

@@ -346,9 +346,8 @@ bool reconocerEnvaseEnSitioEnvasado(short &tipo)
         // detección de envase:
         detecionEnvase(resultfinal);
     }
-    if (true)
+    if (isEnvaseIn())
     {
-        Serial.println("Entro al sensor de inducción.");
         // Determinar el envase:
         switch (definirEnvase(resultfinal))
         {
@@ -359,7 +358,7 @@ bool reconocerEnvaseEnSitioEnvasado(short &tipo)
             break;
         default:
             // Verificar que tipo de envase es:
-            tipo = definirEnvase(resultfinal);
+            tipo = resultfinal;
             break;
         }
         return true;
