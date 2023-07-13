@@ -4,7 +4,6 @@
 // Pines del Proyecto Dosificador:
 
 // ServoMotor:
-#define DIGITAL 22
 #define PWM 8
 
 // Alertas:

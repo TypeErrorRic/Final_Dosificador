@@ -23,8 +23,6 @@ void setup()
   RevisionSensoresInit(); // Revisar sensores.
   initRegresionCuadratica();
   initAlarma();
-  setupCny();
-  setupServomotor();
   // Mensaje de finalización de configuración.
 }
 

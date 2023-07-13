@@ -102,44 +102,72 @@ void doRegresionCuadratica()
 	delay(4000);
 }
 
-/************ IMPLEMETNACIÓN PARA EL CALCULO DE LA DERIVADA **************/
+/************ IMPLEMETNACIÓN DE LA DISPENSADORA DE GRANO **************/
 
-// Función de interpretación del convertidor analogico.
-static float Medir_Peso()
+// Obtener el estado de la tolva:
+// 0:=Tolva requiere llenado
+// 1:=Tolva llena
+// 2:=Tolva no requiera
+// 3:=Error
+static int estadoCantidadTolva()
 {
-	return ((float)(analogRead(PIN_PESO_ENTRADA) / (float)1023) * 1000);
-};
-
-// Realizar la derivada.
-void doDerivada()
-{
-	getLcd().clear();
-	while (1)
+	auxConteo = 0;
+	auxSuma1 = 0;
+	auxSuma2 = 0;
+	while (currentMillisCny - previousMillisCny < 2000)
 	{
-		escribirLcd<String>("Peso:", 0, 0);
-		escribirLcd<float>(Medir_Peso(), 0, 7);
-		escribirLcd<String>(" G", 0, 13);
-		escribirLcd<String>("Dervida:", 1, 0);
-		//getLcd().print(Derivada(Medir_Peso(), Medir_Peso, 500));
+		val1 = analogRead(CNY1);
+		val2 = analogRead(CNY2);
+		auxSuma1 = auxSuma1 + val1;
+		auxSuma2 = auxSuma2 + val2;
+		auxConteo++;
+		delay(300);
+		currentMillisCny = millis();
+	}
+	lectura1 = auxSuma1 / auxConteo;
+	lectura2 = auxSuma2 / auxConteo;
+	previousMillisCny = currentMillisCny;
+	if (lectura1 < tresshold && lectura2 < tresshold)
+	{
+		// Tolva requiere llenado
+		return 0;
+	}
+	else if (lectura1 > tresshold && lectura2 > tresshold)
+	{
+		// Tolva llena
+		return 1;
+	}
+	else if (lectura1 > tresshold && lectura2 < tresshold)
+	{
+		// Tolva no requiere llenado
+		return 2;
+	}
+	else
+	{
+		// Error
+		return 3;
 	}
 }
 
-/************ IMPLEMETNACIÓN DE LA DISPENSADORA DE GRANO **************/
 // Devuelve el estado de la Tolva dispensadora.
 bool stateTolva()
 {
 	switch (estadoCantidadTolva())
 	{
 	case 0:
-		Serial.println("Vaicia.");
+		Serial.println("Tolva requiere llenado");
 		return false;
 	case 1:
-		Serial.println("Llena");
+		Serial.println("Tolva llena");
 		return true;
 	case 2:
-		Serial.println("Llena 2");
+		Serial.println("Tolva no requiere llenado");
 		return true;
 	default:
+		//Esperar un tiempo antes de realizar de nuevo la verificación:
+		delay(500);
+		//Evaluar de nuevo la condición:
+		stateTolva();
 		break;
 	}
 	return false;
@@ -217,8 +245,6 @@ void llenandoEnvase()
 {
 	initCeldad(100);
 	angulo(velocidadDeLlenado);
-	// Aqui va el programa de llenado.
-	Serial.println("Llenando envase.");
 }
 
 // Verfica el llenado del envase.
@@ -228,13 +254,11 @@ bool revisarLLenado()
 	return verficarLlenadoCompleto();
 }
 
-// Detiene el llenado del envase.
+// Función para detención del llenado del envase.
 float stopLllenadoEnvase()
 {
 	stopLllenadoEnvase();
 	retornarCerrado(velocidadDeLlenado);
-	// Programa para detención del llenado del envase.
-	Serial.println("El envase se ha llenado con exito");
 	return 10;
 }
 
@@ -294,19 +318,23 @@ void initAlarma()
 {
 	setupPantalla();
 	setupInteruptMassage();
-	pinMode(RELAYPIN, OUTPUT);
+
+	// Inicializar el sistema de alarmas:
+	pinMode(BUZZER, OUTPUT);
 }
+
+/********************* IMPLEMENTACIÓN PARA SISTEMA ALIMENTADOR ************************/
 
 // Función para prender motor:
 void encenderMotor()
 {
-	digitalWrite(RELAYPIN, HIGH);
+	digitalWrite(RELAY_MOTOR, HIGH);
 }
 
 // Función para apagar motor:
 void apagarMotor()
 {
-	digitalWrite(RELAYPIN, LOW);
+	digitalWrite(RELAY_MOTOR, LOW);
 }
 
 /************************ CONFIGURACIÓN DEL SISTEMA	**********************/
@@ -382,142 +410,65 @@ void ConfigSistem()
 	}
 }
 
-//Sensores del CNY:
+/********************* SISTEMA DE SERVOMOTOR Y CNY **********************/
+
 static int val1 = 0;
 static int val2 = 0;
+
+static int velActual = 0;
+
+static unsigned int estadoTolva = 2;
+static int rele = 30;
 
 static int lectura1 = 0; // Lectura Cny70 1
 static int lectura2 = 0; // Lecutra Cny70 2
 
-static int auxSuma1 = 0;
-static int auxSuma2 = 0;
-static int auxConteo = 0;
+static unsigned int auxSuma1 = 0;
+static unsigned int auxSuma2 = 0;
+static unsigned int auxConteo = 0;
+static unsigned int tresshold = 15;
 
 static unsigned long currentMillisCny = 0;
 static unsigned long previousMillisCny = 0;
 
-void setupCny()
+void InitPortsCNYRELE()
 {
-	// Serial.begin(9600);
 	pinMode(CNY1, INPUT);
 	pinMode(CNY2, INPUT);
+	pinMode(RELAY_MOTOR, OUTPUT);
+	pinMode(PWM, OUTPUT);
+	// Inicializar en Bajo:
+	digitalWrite(PWM, LOW);
 }
 
-int estadoCantidadTolva()
-{
-	///////////
-	// 0:=Tolva requiere llenado
-	// 1:=Tolva llena
-	// 2:=Tolva no requiera
-	// 3:=Error
-	while (currentMillisCny - previousMillisCny < 2000)
-	{
-
-		val1 = analogRead(CNY1);
-		val2 = analogRead(CNY2);
-
-		auxSuma1 = auxSuma1 + val1;
-		auxSuma2 = auxSuma2 + val2;
-
-		auxConteo++;
-		currentMillisCny = millis();
-	}
-	lectura1 = auxSuma1 / auxConteo;
-	lectura2 = auxSuma2 / auxConteo;
-
-	if (lectura1 < 200 && lectura2 < 200)
-	{
-		// Tolva requiere llenado
-		return 0;
-	}
-	else if (lectura1 > 200 && lectura2 > 200)
-	{
-		// Tolva llena
-		return 1;
-	}
-	else if (lectura1 > 200 && lectura2 < 200)
-	{
-		// Tolva no requiere llenado
-		return 2;
-	}
-	else
-	{
-		// Error
-		return 3;
-	}
-	previousMillisCny = currentMillisCny;
-}
-
-static int velActual = 0;
-
-static int servo = 8;
-
-void setupServomotor()
-{
-	Serial.begin(9600);
-	pinMode(servo, OUTPUT); // Configurar el pin del relé como salida
-
-	digitalWrite(servo, LOW);
-}
-
-void loop2()
-{
-	/*
-	  digitalWrite(relePin, HIGH);  // Encender el relé (activar el motor)
-	  delay(2000);  // Esperar 2 segundos
-	  digitalWrite(relePin, LOW);   // Apagar el relé (detener el motor)
-	  delay(2000);  // Esperar 2 segundos
-	*/
-	if (Serial.available())
-	{
-		int command = Serial.parseInt();
-		if (command > 0 && command < 6)
-		{
-			angulo(command);
-			velActual = command;
-		}
-		else if (command == 6)
-		{
-			retornarCerrado(velActual);
-		}
-	} /*
-
-	 pwm = map(pot, 0, 1023, 0, 255);
-	 analogWrite(servo, pwm);
-
-	 delay(30);
-   */
-}
-
+// Función para hacer girar el servomotor en ángulo de apertura.
+// Entradas: 1,2,3,4,5, 6.
 void angulo(int vel)
 {
 	for (int _ = 0; _ < vel; _++)
 	{
-		for (int i = 0; i < 2; i++)
+		for (int i = 0; i < 1; i++)
 		{
-			// analogWrite(servo, 127);
-			digitalWrite(servo, HIGH);
+			digitalWrite(PWM, HIGH);
 			delay(1);
-			digitalWrite(servo, LOW);
+			digitalWrite(PWM, LOW);
 			delay(19);
 		}
 		delay(250);
 	}
 }
 
+// Función para hacer girar el servomotor en ángulo para cerrar.
+// Entradas: 1,2,3,4,5, 6.
 void retornarCerrado(int vel)
 {
 	if (vel == 1)
 	{
-		for (int i = 0; i < 2; i++)
+		for (int i = 0; i < 1; i++)
 		{
-			/*
-			analogWrite(servo, 255);
-			delay(0.1);
-			*/
-			digitalWrite(servo, HIGH);
+			digitalWrite(PWM, HIGH);
 			delay(2);
-			digitalWrite(servo, LOW);
+			digitalWrite(PWM, LOW);
 			delay(18);
 		}
 		delay(250);
@@ -526,15 +477,11 @@ void retornarCerrado(int vel)
 	{
 		for (int _ = 0; _ < vel; _++)
 		{
-			for (int i = 0; i < 2; i++)
+			for (int i = 0; i < 1; i++)
 			{
-				/*
-				analogWrite(servo, 255);
-				delay(0.1);
-				*/
-				digitalWrite(servo, HIGH);
+				digitalWrite(PWM, HIGH);
 				delay(2);
-				digitalWrite(servo, LOW);
+				digitalWrite(PWM, LOW);
 				delay(18);
 			}
 			delay(250);

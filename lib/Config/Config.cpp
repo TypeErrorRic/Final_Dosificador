@@ -23,7 +23,11 @@ void setLCD()
     Lcd.print("Ready");
 }
 
+//Tiempo de impresión del mensaje:
 static unsigned long time_Visual = 0;
+
+//Confirmación del cabio de estado:
+static short prevEstado = 0;
 
 static void escribirEstado(short estado, void (*alarma)(short, bool), bool& realizar, void (*MenuPrincipal)(bool, bool), bool confirmacion)
 {
@@ -36,7 +40,7 @@ static void escribirEstado(short estado, void (*alarma)(short, bool), bool& real
     {
       //Apagar alarmas
       digitalWrite(7, LOW);
-      if (1000 < (millis() - time_Visual))
+      if ((1000 < (millis() - time_Visual)) || (prevEstado != Estado))
       {
         Lcd.clear();
         Lcd.setCursor(0, 0);
@@ -53,6 +57,8 @@ static void escribirEstado(short estado, void (*alarma)(short, bool), bool& real
         Lcd.print(*(NUM_ENVASES[*NUM_CICLO_FINAL])[2]);
         //Actualizar tiempo.
         time_Visual = millis();
+        //Actualizar PrevEstado:
+        prevEstado = Estado;
       }
     }
     else
@@ -86,6 +92,7 @@ static bool Modo_seleccion()
         {
             aux = false;
             count++;
+            delay(100);
         }
         if (count >= 6)
         {
