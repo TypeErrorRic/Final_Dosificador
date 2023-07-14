@@ -178,7 +178,7 @@ void initCeldad(unsigned int num)
         escribirLcd<String>("Coloque un peso", 0, 0, true);
         escribirLcd<String>("500 g", 1, 0);
         // Tiempo de espera para retirar peso.
-        delay(4000);
+        delay(10000);
         escribirLcd<String>("Realizando ", 0, 0, true);
         escribirLcd<String>("Medicion.", 1, 0);
         delay(2000);

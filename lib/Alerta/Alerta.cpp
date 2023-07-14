@@ -524,9 +524,9 @@ void setupPantalla()
 
 //Bucle principal de ejecución del Menu:
 
-void MostrarPantalla(bool isEnvasadoEnable, bool Envase)
+void MostrarPantalla(bool isEnvasadoEnable, bool (*Envase) (void))
 {
-    while (isEnvasadoEnable && SalirMenudo && CONMUTADOR && Envase)
+    while (isEnvasadoEnable && SalirMenudo && CONMUTADOR && !Envase())
     {
         MenuPrincipal();
     }

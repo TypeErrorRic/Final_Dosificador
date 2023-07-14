@@ -25,6 +25,7 @@ void setup()
   initAlarma();              // Inicializar la Alarma.
   InitPortsCNYRELE();        // Inicializar CNY, Rele y Servomotor
   // Mensaje de finalización de configuración.
+  Serial.println("Listo");
 }
 
 /**

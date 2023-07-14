@@ -16,9 +16,9 @@
 
 /***************** MANEJO DE BITS SOBRE LOS ESTADOS DE ENTRADA *********************/
 
-#define PORTCONMUT 12 // Pin reservado exclusivamente para el conmutador en Arduino.
+#define PORTCONMUT 32 // Pin reservado exclusivamente para el conmutador en Arduino.
 #define PIN_AVR 6     // Pin reservado exclusivamente para el conmutador.
-#define CONMUTADOR (0X01 & ~((*((volatile uint8_t *)_SFR_MEM_ADDR(PINB)) & (1 << PIN_AVR)) >> PIN_AVR))
+#define CONMUTADOR !digitalRead(PORTCONMUT)//(0X01 & ~((*((volatile uint8_t *)_SFR_MEM_ADDR(PINB)) & (1 << PIN_AVR)) >> PIN_AVR))
 
 /**
  * @note La conexión del conmutador está hecha en pull_down
@@ -216,7 +216,7 @@ short Modo_Configuracion();
 // Función de flujo de control:
 void flujo_ejecucion_programa(bool (*revisarTolva)(void), void (*llenarTolva)(void), void (*ApagarTolva)(void),
                               bool (*revisarEnvase)(short &), bool (*llenado)(void), void (*doLlenado)(void),
-                              float (*stopLlenado)(void), void (*alerta)(short type, bool state), void (*MenuPrincipal)(bool, bool),
+                              float (*stopLlenado)(void), void (*alerta)(short type, bool state), void (*MenuPrincipal)(bool, bool(*)(void)),
                               void (*actualizar)(void), void (*initCeldad)(unsigned int num), bool (*confirmarEnvase)(void));
 
 // Función de Inicialización de registro y Memoria:
@@ -224,8 +224,8 @@ void RevisionSensoresInit();
 
 // Función con las funciones de verificación de sensores:
 void Revision_variables(bool (*revisarTolva)(void), void (*llenarTolva)(void),
-                        bool (*revisarEnvase)(short &), bool (*llenado)(void), void (*alerta)(short type, bool state),
-                        void (*initCeldad)(unsigned int num));
+                        bool (*revisarEnvase)(short &), bool (*llenado)(void), void (*alerta)(short, bool),
+                        void (*MenuPrincipal)(bool, bool(*)(void)), bool (*confirmarEnvase)(void));
 
 // Getter: retorna Estado:
 const short &getEstado();

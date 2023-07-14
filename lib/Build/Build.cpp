@@ -111,7 +111,23 @@ void doRegresionCuadratica()
 // 1:=Tolva llena
 // 2:=Tolva no requiera
 // 3:=Error
-static int estadoCantidadTolva()
+
+static int val1 = 0;
+static int val2 = 0;
+
+static unsigned int lectura1 = 0; // Lectura Cny70 1
+static unsigned int lectura2 = 0; // Lecutra Cny70 2
+
+static unsigned int auxSuma1 = 0;
+static unsigned int auxSuma2 = 0;
+static unsigned int auxConteo = 0;
+static unsigned int tresshold = 15;
+
+static unsigned long currentMillisCny = 0;
+static unsigned long previousMillisCny = 0;
+
+
+static int estadoCantidadTolvaStatic()
 {
 	auxConteo = 0;
 	auxSuma1 = 0;
@@ -129,17 +145,17 @@ static int estadoCantidadTolva()
 	lectura1 = auxSuma1 / auxConteo;
 	lectura2 = auxSuma2 / auxConteo;
 	previousMillisCny = currentMillisCny;
-	if (lectura1 < tresshold && lectura2 < tresshold)
+	if ((lectura1 < tresshold) && (lectura2 < tresshold))
 	{
 		// Tolva requiere llenado
 		return 0;
 	}
-	else if (lectura1 > tresshold && lectura2 > tresshold)
+	else if ((lectura1 > tresshold) && (lectura2 > tresshold))
 	{
 		// Tolva llena
 		return 1;
 	}
-	else if (lectura1 > tresshold && lectura2 < tresshold)
+	else if ((lectura1 > tresshold) && (lectura2 < tresshold))
 	{
 		// Tolva no requiere llenado
 		return 2;
@@ -154,7 +170,7 @@ static int estadoCantidadTolva()
 // Devuelve el estado de la Tolva dispensadora.
 bool stateTolva()
 {
-	switch (estadoCantidadTolva())
+	switch (estadoCantidadTolvaStatic())
 	{
 	case 0:
 		Serial.println("Tolva requiere llenado");
@@ -374,8 +390,9 @@ static void pruebasModulares()
 	escribirLcd<String>("Celdad Carga", 1, 0);
 	initCeldad(TIME_COMPROBACION);
 	short aux = 0;
-	while(1)
+	while(digitalRead(botonArriba))
 	{
+		Captura_dato();
 		if (reconocerEnvaseEnSitioEnvasado(aux))
 		{
 			if(aux == 1)
@@ -384,18 +401,19 @@ static void pruebasModulares()
 		if((millis() - timer) > DELAY_MESSAGE)
 		{
 			escribirLcd<String>("Peso:", 0, 0, true);
-			escribirLcd<float>(Medidas.medicionHx, 1, 0);
+			escribirLcd<float>(getCeldadcargaValue(), 1, 0);
+			timer = millis();
 		}
 	}
 	stopMediciones();
 }
 
-static bool crash = false; // Bandera para salir del menu.
+static bool crash2 = false; // Bandera para salir del menu.
 
 void ConfigSistem()
 {
-	crash = false;
-	while (!crash)
+	crash2 = false;
+	while (!crash2)
 	{
 		switch (counterChangeMessage)
 		{
@@ -421,7 +439,7 @@ void ConfigSistem()
 			if ((millis() - timer) > DELAY_MESSAGE)
 			{
 				escribirLcd<String>("3. P.Modular.", 0, 0, true);
-				escribirLcd<String>("4. Salir.", 1, 0, true);
+				escribirLcd<String>("4. Salir.", 1, 0);
 				timer = millis();
 				counterChangeMessage++;
 			}
@@ -430,13 +448,13 @@ void ConfigSistem()
 			counterChangeMessage = 0;
 			break;
 		}
-		if ((Serial.available() > 0) && !crash)
+		if ((Serial.available() > 0) && !crash2)
 		{
 			switch ((char)Serial.read())
 			{
 			case '1':
 				doRegresionCuadratica();
-				crash = true;
+				crash2 = true;
 				break;
 			case '2':
 				FACTOR_CELDADCARGA = 0;
@@ -447,13 +465,13 @@ void ConfigSistem()
 				Serial.println(*FACTOR_CELDADCARGA);
 				Serial.print("Scala: ");
 				Serial.println(*SCALE);
-				crash = true;
+				crash2 = true;
 				break;
 			case '3':
 				pruebasModulares();
-				crash = true;
+				crash2 = true;
 			case '4':
-				crash = true;
+				crash2 = true;
 			default:
 				break;
 			}
@@ -462,22 +480,6 @@ void ConfigSistem()
 }
 
 /********************* SISTEMA DE SERVOMOTOR Y CNY **********************/
-
-static int val1 = 0;
-static int val2 = 0;
-
-static int velActual = 0;
-
-static int lectura1 = 0; // Lectura Cny70 1
-static int lectura2 = 0; // Lecutra Cny70 2
-
-static unsigned int auxSuma1 = 0;
-static unsigned int auxSuma2 = 0;
-static unsigned int auxConteo = 0;
-static unsigned int tresshold = 15;
-
-static unsigned long currentMillisCny = 0;
-static unsigned long previousMillisCny = 0;
 
 void InitPortsCNYRELE()
 {

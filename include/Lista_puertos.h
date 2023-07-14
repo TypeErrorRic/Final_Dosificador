@@ -31,6 +31,6 @@
 #define INDUCTIVO 50
 
 // Relay Motor
-#define RELAY_MOTOR A2
+#define RELAY_MOTOR 9
 
 #endif
