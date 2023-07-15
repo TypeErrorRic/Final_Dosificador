@@ -39,7 +39,7 @@ extern Alerta Alertas;
 //Mostrar mensajes sobre el ciclo de envasado:
 
 void setupPantalla();
-void MostrarPantalla(bool isEnvasadoEnable, bool (*Envase) (void));
+void MostrarPantalla(bool isEnvasadoEnable, bool (*Envase) (void), void (*Capturar) (void));
 void setupInteruptMassage();
 void isr_handler();
 

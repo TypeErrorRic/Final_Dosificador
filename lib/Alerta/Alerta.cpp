@@ -167,14 +167,13 @@ static char auxCadena[16];
 static int del = 200; // Delay para evitar el ruido.
 
 //// Variables del sistema ////
-
-unsigned short velocidadDeLlenado = 4;
+unsigned short velocidadDeLlenado = 3;
 
 static int PESOSMAXIMOS[3] = {179, 282, 330}; // Pesos de los tres tipos de recipientes cuando están llenos.
 static int PESOSMINIMOS[3] = {31, 40, 50};    // Pesos de los tres tipos de recipientes cuando está con la cantidad mínima.
 
 //Pesos de los envases:
-int pesos[3] = {179, 282, 330}; // Pesos del envase 1, 2 y 3 respectivamente (incluyendo el peso de la lata vacía).
+int pesos[3] = {160, 282, 500}; // Pesos del envase 1, 2 y 3 respectivamente (incluyendo el peso de la lata vacía).
                                        // NOTA: el peso 3 no se ha definido aún, por lo que por ahora se define (arbitrariamente) como 330.
 
 /* Variables de Menú */
@@ -524,10 +523,11 @@ void setupPantalla()
 
 //Bucle principal de ejecución del Menu:
 
-void MostrarPantalla(bool isEnvasadoEnable, bool (*Envase) (void))
+void MostrarPantalla(bool isEnvasadoEnable, bool (*Envase) (void), void (*Capturar) (void))
 {
     while (isEnvasadoEnable && SalirMenudo && CONMUTADOR && !Envase())
     {
+        Capturar();
         MenuPrincipal();
     }
     SalirMenudo = true;

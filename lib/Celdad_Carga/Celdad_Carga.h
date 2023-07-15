@@ -26,7 +26,7 @@
 
 #define APROX_PARA_VALOR_CELDAD_CARGA 3 // Número de datos tomados por la celdad de carga.
 
-#define CRITERIO_ENVASE 10 // Criterio minimo para identificar un envase.
+#define CRITERIO_ENVASE 2 // Criterio minimo para identificar un envase.
 
 #define PESO_COMPROBACION 500.0 // Peso de confirmación
 
@@ -97,10 +97,10 @@ extern pvResultsMedicion Medidas;
 // Medidas de reconocimiento de los pesos de los envases:
 #define ENVASE_1_PESO 31
 #define ENVASE_2_PESO 40
-#define ENVASE_3_PESO 60
+#define ENVASE_3_PESO 63
 
 // Rango de redondeo de los valores:
-#define VALOR_DESFASE 2
+#define VALOR_DESFASE 3
 // Porcentaje de error admitido entre 2 medidas
 #define VALOR_ERROR 0.05
 // Porcentaje de error admitido entre 2 medidas cuando la última medida es mayor al umbral de que hay un envase.
@@ -119,6 +119,6 @@ bool reconocerEnvaseEnSitioEnvasado(short &tipo);
 #define LLENADO_DEL_ENVASE_DESFASE 5
 
 // Función para verificar si hay u envase en el sitio de envasado:
-bool verficarLlenadoCompleto();
+bool verficarLlenadoCompleto(void (*retornarCerrado) (int));
 
 #endif

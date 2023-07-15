@@ -216,7 +216,8 @@ short Modo_Configuracion();
 // Función de flujo de control:
 void flujo_ejecucion_programa(bool (*revisarTolva)(void), void (*llenarTolva)(void), void (*ApagarTolva)(void),
                               bool (*revisarEnvase)(short &), bool (*llenado)(void), void (*doLlenado)(void),
-                              float (*stopLlenado)(void), void (*alerta)(short type, bool state), void (*MenuPrincipal)(bool, bool(*)(void)),
+                              float (*stopLlenado)(void), void (*alerta)(short type, bool state), 
+                              void (*MenuPrincipal)(bool, bool(*)(void), void (*) (void)),
                               void (*actualizar)(void), void (*initCeldad)(unsigned int num), bool (*confirmarEnvase)(void));
 
 // Función de Inicialización de registro y Memoria:
@@ -225,7 +226,8 @@ void RevisionSensoresInit();
 // Función con las funciones de verificación de sensores:
 void Revision_variables(bool (*revisarTolva)(void), void (*llenarTolva)(void),
                         bool (*revisarEnvase)(short &), bool (*llenado)(void), void (*alerta)(short, bool),
-                        void (*MenuPrincipal)(bool, bool(*)(void)), bool (*confirmarEnvase)(void));
+                        void (*MenuPrincipal)(bool, bool(*)(void), void (*) (void)), bool (*confirmarEnvase)(void),
+                        void (*actualizar)(void));
 
 // Getter: retorna Estado:
 const short &getEstado();

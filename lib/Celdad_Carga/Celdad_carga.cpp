@@ -313,6 +313,7 @@ bool confirmarEnvase()
         // Obteneción del reconocimiento de envase rapido:
         resultfinal = getCeldadcargaValue();
     }
+    Serial.println(resultfinal);
     // Verificar si hay un envase o no:
     if ((resultfinal >= CRITERIO_ENVASE))
         return true;
@@ -346,6 +347,10 @@ bool reconocerEnvaseEnSitioEnvasado(short &tipo)
         // detección de envase:
         detecionEnvase(resultfinal);
     }
+    else
+    {
+        resultfinal = getCeldadcargaValue();
+    }
     if (isEnvaseIn())
     {
         // Determinar el envase:
@@ -356,76 +361,106 @@ bool reconocerEnvaseEnSitioEnvasado(short &tipo)
             tipo = 0;
             return false;
             break;
+        case 1:
+            tipo = 1;
+            break;
+        case 2:
+            tipo = 2;
+            break;
+        case 3:
+            tipo = 3;
+            break;
         default:
             // Verificar que tipo de envase es:
-            tipo = resultfinal;
+            tipo = 0;
             break;
         }
+        Serial.print("Envase: ");
+        Serial.println(tipo);
         return true;
     }
     return false;
 }
 
 // Verifica si ya se lleno los recipientes:
-bool verficarLlenadoCompleto()
+bool verficarLlenadoCompleto(void (*retornarCerrado)(int))
 {
+    bool salir1 = false;
     if (Celdad_Carga::medicion)
     {
-        //Finalizar verificación del llenado:
+        // Finalizar verificación del llenado:
         if (!digitalRead(botonCancelar))
         {
             Estado = 1;
             stopMediciones();
+            retornarCerrado(6);
         }
-        Serial.println(getCeldadcargaValue());
-        //Comprobar el tipo de envase:
+        Serial.println("Identificando si esta lleno.");
+        // Comprobar el tipo de envase:
         switch (TIPO_ENVASE)
         {
         case 1:
-            if (getCeldadcargaValue() >= (ENVASE_1_PESO_COMPLETO - LLENADO_DEL_ENVASE_DESFASE))
+            if (Medidas.medicionHx >= (ENVASE_1_PESO_COMPLETO - LLENADO_DEL_ENVASE_DESFASE))
             {
                 Serial.println("LLeno.");
-                delay(1000);
-                return true;
+                salir1 = true;
+            }
+            else
+            {
+                Serial.println("Vacio.");
             }
             break;
         case 2:
-            if (getCeldadcargaValue() >= (ENVASE_2_PESO_COMPLETO - LLENADO_DEL_ENVASE_DESFASE))
-                return true;
+            if (Medidas.medicionHx >= (ENVASE_2_PESO_COMPLETO - LLENADO_DEL_ENVASE_DESFASE))
+            {
+                Serial.println("LLeno.");
+                salir1 = true;
+            }
+            else
+            {
+                Serial.println("Vacio.");
+            }
             break;
         case 3:
-            if (getCeldadcargaValue() >= (ENVASE_3_PESO_COMPLETO - LLENADO_DEL_ENVASE_DESFASE))
-                return true;
+            if (Medidas.medicionHx >= (ENVASE_3_PESO_COMPLETO - LLENADO_DEL_ENVASE_DESFASE))
+            {
+                Serial.println("LLeno.");
+                salir1 = true;
+            }
+            else
+            {
+                Serial.println("Vacio.");
+            }
             break;
         default:
             break;
         }
     }
-    //Comprobar el tipo de envase cuando la celdad de carga no está inicializada:
+    // Comprobar el tipo de envase cuando la celdad de carga no está inicializada:
     else
     {
         switch (TIPO_ENVASE)
         {
         case 1:
             if (getaValueFull() >= (ENVASE_1_PESO_COMPLETO - LLENADO_DEL_ENVASE_DESFASE))
-                return true;
+                salir1 = true;
             break;
         case 2:
             if (getaValueFull() >= (ENVASE_2_PESO_COMPLETO - LLENADO_DEL_ENVASE_DESFASE))
-                return true;
+                salir1 = true;
             break;
         case 3:
             if (getaValueFull() >= (ENVASE_3_PESO_COMPLETO - LLENADO_DEL_ENVASE_DESFASE))
-                return true;
+                salir1 = true;
             break;
         default:
             break;
         }
     }
-    return false;
+    return salir1;
 }
 
-//Funcionamiento del sensor de inducción:
+// Funcionamiento del sensor de inducción:
 bool isEnvaseIn()
 {
     if (digitalRead(INDUCTIVO))

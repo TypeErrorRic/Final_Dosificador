@@ -36,7 +36,7 @@ static unsigned short contador = 0;
 // Función para realizar la captura de datos para realizar la regresión cuadratica usnado promedio
 static void captureModulate(float &x, int (*y)(void), float &z, bool get_realizar)
 {
-	//Colocar un ángulo en la entrada:
+	// Colocar un ángulo en la entrada:
 	angulo(puntos_busquedad[1]);
 	delay(1000);
 	// Iniciar toma del dato:
@@ -126,7 +126,6 @@ static unsigned int tresshold = 15;
 static unsigned long currentMillisCny = 0;
 static unsigned long previousMillisCny = 0;
 
-
 static int estadoCantidadTolvaStatic()
 {
 	auxConteo = 0;
@@ -209,6 +208,10 @@ void offTolva()
 
 /************ IMPLEMETACIÓN DEl SISTEMA DE ENVASADO **************/
 
+// Variable para tiempo de espera de reconocimiento:
+static unsigned long varAuxPeso = 0;
+static short contadorPesoVar = 0;
+
 // Función que permite conocer el tipo de envase.
 bool revisarEnvase(short &Tipo)
 {
@@ -224,12 +227,31 @@ bool revisarEnvase(short &Tipo)
 	if (RECONOCIMIENTO_ENVASE)
 	{
 		// Reconoce el tipo de envase:
-		if (getEstado() == 5)
+		Serial.println(Estado);
+		varAuxPeso = millis();
+		short tipoEnvase = 0;
+		if (Estado == 5)
 		{
-			if (reconocerEnvaseEnSitioEnvasado(Tipo))
+			while ((millis() - varAuxPeso) < 7000)
 			{
+				Captura_dato();
+				if (reconocerEnvaseEnSitioEnvasado(tipoEnvase))
+				{
+					switch (tipoEnvase)
+					{
+					case 0:
+						break;
+					default:
+						contadorPesoVar++;
+						break;
+					}
+				}
+			}
+			if (contadorPesoVar > 40)
+			{
+				Tipo = tipoEnvase;
 				Serial.print("Tipo de envase seleccionado: ");
-				Serial.println(Tipo);
+				Serial.println(tipoEnvase);
 				return true;
 			}
 			else
@@ -261,23 +283,22 @@ bool revisarEnvase(short &Tipo)
 // Activa el llenado del envase.
 void llenandoEnvase()
 {
-	initCeldad(100);
 	angulo(velocidadDeLlenado);
+	Serial.println("Servomotor On");
 }
 
 // Verfica el llenado del envase.
 bool revisarLLenado()
 {
 	// Programa para revisar se lleno el envase.
-	return verficarLlenadoCompleto();
+	return verficarLlenadoCompleto(retornarCerrado);
 }
 
 // Función para detención del llenado del envase.
 float stopLllenadoEnvase()
 {
-	stopLllenadoEnvase();
-	retornarCerrado(velocidadDeLlenado);
-	return 10;
+	retornarCerrado(6);
+	return getCeldadcargaValue();
 }
 
 /********************* IMPLEMENTACIÓN PARA SISTEMA DE ALERTA ************************/
@@ -362,6 +383,8 @@ static unsigned long timer = 0;
 
 #define DELAY_MESSAGE 3000UL
 
+static int velActual = 0;
+
 static void pruebasModulares()
 {
 	escribirLcd<String>("Verificando", 0, 0, true);
@@ -372,33 +395,44 @@ static void pruebasModulares()
 	offTolva();
 	delay(2000);
 	escribirLcd<String>("Verificando", 0, 0, true);
-	escribirLcd<String>("Servomotor.", 1, 0);
-	// Probar Servomotor:
-	for (int i = 1; i <= 6; i++)
+	escribirLcd<String>("Angulo.", 1, 0);
+	while (digitalRead(botonArriba))
 	{
-		angulo(i);
-		delay(500);
+		if (Serial.available())
+		{
+			int command = Serial.parseInt();
+			if (command > 0 && command < 6)
+			{
+				angulo(command);
+				velActual = command;
+			}
+			else if (command == 6)
+			{
+				retornarCerrado(velActual);
+			}
+		}
 	}
-	retornarCerrado(6);
+	velActual = 0;
 	delay(2000);
 	// Probar Sensor de Inducción:
 	escribirLcd<String>("Verificando", 0, 0, true);
 	escribirLcd<String>("Sensor Inducion", 1, 0);
-	while (isEnvaseIn());
-	//Probar Celdad de Carga:
+	while (!isEnvaseIn())
+		;
+	// Probar Celdad de Carga:
 	escribirLcd<String>("Verificando", 0, 0, true);
 	escribirLcd<String>("Celdad Carga", 1, 0);
 	initCeldad(TIME_COMPROBACION);
 	short aux = 0;
-	while(digitalRead(botonArriba))
+	while (digitalRead(botonArriba))
 	{
 		Captura_dato();
 		if (reconocerEnvaseEnSitioEnvasado(aux))
 		{
-			if(aux == 1)
+			if (aux == 1)
 				break;
 		}
-		if((millis() - timer) > DELAY_MESSAGE)
+		if ((millis() - timer) > DELAY_MESSAGE)
 		{
 			escribirLcd<String>("Peso:", 0, 0, true);
 			escribirLcd<float>(getCeldadcargaValue(), 1, 0);

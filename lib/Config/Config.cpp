@@ -36,11 +36,12 @@ static unsigned long time_Visual = 0;
 static short prevEstado = 0;
 
 static void escribirEstado(short estado, void (*alarma)(short, bool), bool &realizar,
-                           void (*MenuPrincipal)(bool, bool(*)(void)), bool (*confirmacion)(void))
+                           void (*MenuPrincipal)(bool, bool(*)(void), void (*) (void)), bool (*confirmacion)(void),
+                           void (*Capturar) (void), bool (*revisarEnvase)(short &))
 {
     if(Estado == 5 && ejecutarMenu)
     {
-      MenuPrincipal(true, confirmacion);
+      MenuPrincipal(true, confirmacion, Capturar);
       ejecutarMenu = false;
     }
     if (!mostrarMensaje)
@@ -307,7 +308,8 @@ void RevisionSensoresInit()
 // Revision de los sensores de cada sistema:
 void Revision_variables(bool (*revisarTolva)(void), void (*llenarTolva)(void),
                         bool (*revisarEnvase)(short &), bool (*llenado)(void), void (*alerta)(short, bool),
-                        void (*MenuPrincipal)(bool, bool(*)(void)), bool (*confirmarEnvase)(void))
+                        void (*MenuPrincipal)(bool, bool(*)(void), void(*)(void)), bool (*confirmarEnvase)(void),
+                        void (*actualizar)(void))
 {
   switch (Estado)
   {
@@ -317,7 +319,7 @@ void Revision_variables(bool (*revisarTolva)(void), void (*llenarTolva)(void),
     {
       ++(PESO[*NUM_CICLO_FINAL] = 0);
       NUM_ENVASES.Begin(*NUM_CICLO_FINAL);
-      escribirEstado(Estado, alerta, Alert, MenuPrincipal, confirmarEnvase);
+      escribirEstado(Estado, alerta, Alert, MenuPrincipal, confirmarEnvase, actualizar, revisarEnvase);
       crash = true;
     }
     Cambio = true;
@@ -363,12 +365,13 @@ void Revision_variables(bool (*revisarTolva)(void), void (*llenarTolva)(void),
 // Flujo de Ejcución del sistema.
 void flujo_ejecucion_programa(bool (*revisarTolva)(void), void (*llenarTolva)(void), void (*ApagarTolva)(void),
                               bool (*revisarEnvase)(short &), bool (*llenado)(void), void (*doLlenado)(void),
-                              float (*stopLlenado)(void), void (*alerta)(short type, bool state), void (*MenuPrincipal)(bool, bool(*)(void)),
+                              float (*stopLlenado)(void), void (*alerta)(short type, bool state), 
+                              void (*MenuPrincipal)(bool, bool(*)(void), void (*) (void)),
                               void (*actualizar)(void), void (*initCeldad)(unsigned int num), bool (*confirmarEnvase)(void))
 {
   actualizar();
   //Revision de todos los sensores:
-  Revision_variables(revisarTolva, llenarTolva, revisarEnvase, llenado, alerta, MenuPrincipal, confirmarEnvase);
+  Revision_variables(revisarTolva, llenarTolva, revisarEnvase, llenado, alerta, MenuPrincipal, confirmarEnvase, actualizar);
   //Flujo del programa:
   switch (Estado)
   {
@@ -381,7 +384,7 @@ void flujo_ejecucion_programa(bool (*revisarTolva)(void), void (*llenarTolva)(vo
     if (CONMUTADOR)
     {
       //Mostrar que se finalizo el mensaje:
-      escribirEstado(Estado, alerta, Alert, MenuPrincipal, confirmarEnvase);
+      escribirEstado(Estado, alerta, Alert, MenuPrincipal, confirmarEnvase, actualizar, revisarEnvase);
       //Reconocer a que estado se va:
       if (RECONOCIMIENTO_ENVASE) Estado = 2;
       else Estado = 3;
@@ -399,16 +402,16 @@ void flujo_ejecucion_programa(bool (*revisarTolva)(void), void (*llenarTolva)(vo
     break;
   case 3: // ¿Cuál es el estado de la tolva?
     //Mostrar que se finalizo el mensaje:
-    escribirEstado(Estado, alerta, Alert, MenuPrincipal, confirmarEnvase);
+    escribirEstado(Estado, alerta, Alert, MenuPrincipal, confirmarEnvase, actualizar, revisarEnvase);
     //Determinar que estado va:
     if (revisarTolva()) {Estado = 5; if(!SENSAR_TOLVA) {MSENSORTOLVA(1);}}
     else Estado = 4;
+    initCeldad(TIME_CONFIRMACION_CELDAD); //Inicializar la celdad de carga.
     break;
   case 4: // Encender Alimentador
     while (!revisarTolva()); // Revisar sensor de la tolva por polling.
     MSENSORTOLVA(1);// Se ha llenado.
     ApagarTolva(); // Apagar_Dispensador.
-    initCeldad(TIME_CONFIRMACION_CELDAD); //Inicializar la celdad de carga.
     Estado = 5;
   case 5: // Reconocimiento de envase
     if (CONMUTADOR)
@@ -476,7 +479,7 @@ void flujo_ejecucion_programa(bool (*revisarTolva)(void), void (*llenarTolva)(vo
     break;
   }
   //Imprimir en Pantalla:
-  escribirEstado(Estado, alerta, Alert, MenuPrincipal, confirmarEnvase);
+  escribirEstado(Estado, alerta, Alert, MenuPrincipal, confirmarEnvase, actualizar, revisarEnvase);
   //Comprobar velocidad de funcionamiento:
   digitalWrite(13, !digitalRead(13));
 }
